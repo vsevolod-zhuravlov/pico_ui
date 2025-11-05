@@ -5,9 +5,12 @@ import './index.css';
 import { AppContextProvider } from '@/contexts';
 import { BrowserRouter } from "react-router-dom";
 
+// Set basename for GitHub Pages deployment
+const basename = import.meta.env.BASE_URL;
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={basename}>
       <AppContextProvider>
         <App />
       </AppContextProvider>

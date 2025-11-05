@@ -17,6 +17,12 @@ This project is configured to automatically deploy to GitHub Pages using GitHub 
    - **Source**: GitHub Actions
 4. Push to the `main` or `test_deployment` branch, or manually trigger the workflow
 
+### Accessing Your Deployed Site
+
+Your site will be available at: **`https://YOUR_USERNAME.github.io/pico_ui/`**
+
+⚠️ **Important**: Make sure to include `/pico_ui/` in the URL. Visiting just `https://YOUR_USERNAME.github.io/` will not work!
+
 ### Client-Side Routing
 
 The app uses React Router with BrowserRouter for clean URLs. To make direct URL visits work on GitHub Pages:
@@ -52,3 +58,17 @@ The deployment workflow is located at `.github/workflows/deploy.yml` and include
 - Building the project with all dependencies.
 - Copying `index.html` to `404.html` for SPA routing support
 - Deploying to GitHub Pages
+
+### Troubleshooting
+
+**White screen / "Loading module from... was blocked":**
+- ✅ **Solution**: Make sure you're visiting `https://YOUR_USERNAME.github.io/pico_ui/` (with `/pico_ui/`)
+- ❌ **Wrong URL**: `https://YOUR_USERNAME.github.io/` (this won't work)
+
+**404 errors when visiting vault URLs directly:**
+- This should be fixed automatically by the `404.html` copy step in the workflow
+- Make sure the deployment completed successfully
+
+**Assets not loading:**
+- Verify the `base` path in `vite.config.ts` matches your repository name
+- Check that `GITHUB_ACTIONS` environment variable is set during the build (it's automatic in the workflow)
