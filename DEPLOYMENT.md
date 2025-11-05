@@ -49,6 +49,6 @@ Note: The preview server will use base path `/` instead of `/pico_ui/`, so routi
 ### Workflow File
 
 The deployment workflow is located at `.github/workflows/deploy.yml` and includes:
-- Building the project with all dependencies
+- Building the project with all dependencies.
 - Copying `index.html` to `404.html` for SPA routing support
 - Deploying to GitHub Pages
