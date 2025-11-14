@@ -49,5 +49,6 @@ export const renderSymbolWithPlaceholder = ({
     );
   }
   
+  
   return renderWithTransition(symbol, isLoading);
 };
