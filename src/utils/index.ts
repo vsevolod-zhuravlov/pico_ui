@@ -24,4 +24,5 @@ export { limitDecimals } from './limitDecimals';
 export { processInput } from './processInput';
 export { applyGasSlippage } from './applyGasSlippage';
 export { isShowWrapPreview } from './isShowWrapPreview';
+export { isZeroOrNan } from './isZeroOrNan';
 export * from './api';
