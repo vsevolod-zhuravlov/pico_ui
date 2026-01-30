@@ -211,7 +211,6 @@ export const VaultContextProvider = ({ children, vaultAddress, params }: { child
   const [isCheckingWhitelist, setIsCheckingWhitelist] = useState<boolean>(false);
   const [isActivatingWhitelist, setIsActivatingWhitelist] = useState<boolean>(false);
   const [whitelistError, setWhitelistError] = useState<string | null>(null);
-  const [lastCheckedAddressForSignature, setLastCheckedAddressForSignature] = useState<string | null>(null);
   const [hasUsedInitialWhitelistParams, setHasUsedInitialWhitelistParams] = useState<boolean>(false);
   const [hasUsedInitialSignatureParams, setHasUsedInitialSignatureParams] = useState<boolean>(false);
   const [isRefreshingBalances, setIsRefreshingBalances] = useState<boolean>(false);
@@ -687,71 +686,50 @@ export const VaultContextProvider = ({ children, vaultAddress, params }: { child
   }, [vaultLens, params.isWhitelistActivated]);
 
   // Check if user has signature and load signature data
+  const getSignatureData = useCallback((userAddress: string) => {
+    if (!currentNetwork || !vaultAddress) return null;
+
+    const networkSignatures = (signaturesConfig as any)[currentNetwork];
+    const vaultSignatures = networkSignatures?.vaults?.[vaultAddress.toLowerCase()];
+    const signaturesMap = vaultSignatures?.signatures;
+
+    if (!signaturesMap) return null;
+    return signaturesMap[userAddress.toLowerCase()];
+  }, [currentNetwork, vaultAddress]);
+
   useEffect(() => {
-    if (!address || !currentNetwork || !vaultAddress) {
+    if (!address) {
       setHasSignature(false);
       setSignature(null);
-      setLastCheckedAddressForSignature(null);
       return;
     }
 
-    // If we have params and haven't checked any address yet, use params
-    if (!hasUsedInitialSignatureParams && params.hasSignature !== undefined) {
-      setHasSignature(params.hasSignature);
-      setLastCheckedAddressForSignature(address);
+    // On first load, if we have params - consume them, if user switched accounts - strictly check
+    const shouldConsumeParams = !hasUsedInitialSignatureParams && params.hasSignature !== undefined;
+
+    if (shouldConsumeParams) {
       setHasUsedInitialSignatureParams(true);
+      setHasSignature(params.hasSignature ?? false);
 
-      // If params say user has signature, load the signature data
+      // If params say we have a signature, load it
       if (params.hasSignature) {
-        const networkSignatures = (signaturesConfig as any)[currentNetwork];
-        const vaultSignatures = networkSignatures?.vaults?.[vaultAddress.toLowerCase()];
-        const signaturesMap = vaultSignatures?.signatures;
-        const addressLower = address.toLowerCase();
-        const signatureData = signaturesMap?.[addressLower];
-
-        if (signatureData) {
-          setSignature({
-            v: signatureData.v,
-            r: signatureData.r,
-            s: signatureData.s
-          });
+        const data = getSignatureData(address);
+        if (data) {
+          setSignature({ v: data.v, r: data.r, s: data.s });
         }
       }
-      return;
-    }
-
-    // If address changed or no params were provided, check signature
-    if (address !== lastCheckedAddressForSignature) {
-      setHasUsedInitialSignatureParams(true);
-      const networkSignatures = (signaturesConfig as any)[currentNetwork];
-      const vaultSignatures = networkSignatures?.vaults?.[vaultAddress.toLowerCase()];
-      const signaturesMap = vaultSignatures?.signatures;
-
-      if (!signaturesMap) {
-        setHasSignature(false);
-        setSignature(null);
-        setLastCheckedAddressForSignature(address);
-        return;
-      }
-
-      const addressLower = address.toLowerCase();
-      const signatureData = signaturesMap[addressLower];
-
-      if (signatureData) {
+    } else {
+      // Standard check for current address (account switching logic)
+      const data = getSignatureData(address);
+      if (data) {
         setHasSignature(true);
-        setSignature({
-          v: signatureData.v,
-          r: signatureData.r,
-          s: signatureData.s
-        });
+        setSignature({ v: data.v, r: data.r, s: data.s });
       } else {
         setHasSignature(false);
         setSignature(null);
       }
-
-      setLastCheckedAddressForSignature(address);
     }
-  }, [address, currentNetwork, vaultAddress, params.hasSignature, lastCheckedAddressForSignature, hasUsedInitialSignatureParams]);
+  }, [address, params.hasSignature, hasUsedInitialSignatureParams, getSignatureData]);
 
   // NFT Logic
   useEffect(() => {
