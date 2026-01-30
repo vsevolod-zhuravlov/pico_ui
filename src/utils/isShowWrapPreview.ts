@@ -24,17 +24,12 @@ export function isShowWrapPreview(flags: ErrorFlags) {
   } = flags;
 
   const hasAnyErrorOrWarning =
-    !!inputValue &&
-    (
-      isInputMoreThanMax ||
-      isAmountLessThanMin ||
-      invalidRebalanceMode ||
-      hasInsufficientBalance ||
-      isErrorLoadingPreview ||
-      showWarning
-    ) &&
-    !flashLoanLoading &&
-    !isWrapping;
+    isInputMoreThanMax ||
+    isAmountLessThanMin ||
+    invalidRebalanceMode ||
+    hasInsufficientBalance ||
+    isErrorLoadingPreview ||
+    showWarning;
 
   const shouldShowWrapPreview =
     isWrapping ||
