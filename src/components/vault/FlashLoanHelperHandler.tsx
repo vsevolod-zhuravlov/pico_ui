@@ -363,38 +363,44 @@ export default function FlashLoanHelperHandler({
     setWrapSuccess('');
     setIsProcessing(true);
 
-    // If using ETH input for wstETH vault, wrap ETH to wstETH first
-    if (useEthWrapToWSTETH && isWstETHVault && ethToWrapValue && provider && signer) {
-      setIsWrapping(true);
-      const ethAmount = parseEther(ethToWrapValue);
+    try {
+      // If using ETH input for wstETH vault, wrap ETH to wstETH first
+      if (useEthWrapToWSTETH && isWstETHVault && ethToWrapValue && provider && signer) {
+        setIsWrapping(true);
+        const ethAmount = parseEther(ethToWrapValue);
 
-      const wrapResult = await wrapEthToWstEth(
-        provider,
-        signer,
-        ethAmount,
-        address,
-        setWrapSuccess,
-        setWrapError
-      );
+        const wrapResult = await wrapEthToWstEth(
+          provider,
+          signer,
+          ethAmount,
+          address,
+          setWrapSuccess,
+          setWrapError
+        );
 
-      if (!wrapResult) {
+        if (!wrapResult) {
+          setIsWrapping(false);
+          setIsProcessing(false);
+          return; // Error already set by wrapEthToWstEth, finally will handle processing state
+        }
+
+        // Refresh balances to get updated wstETH balance
+        await refreshBalances();
         setIsWrapping(false);
-        setIsProcessing(false);
-        return; // Error already set by wrapEthToWstEth
       }
 
-      // Refresh balances to get updated wstETH balance
-      await refreshBalances();
+      const success = await flashLoan.execute();
+      
+      if (success) {
+        setInputValue('');
+        setSharesToProcess(null);
+        setEthToWrapValue('');
+      }
+    } catch (err) {
+      console.error('Error in handling flash loan helper submit:', err);
+    } finally {
+      setIsProcessing(false);
       setIsWrapping(false);
-    }
-
-    const success = await flashLoan.execute();
-    setIsProcessing(false);
-
-    if (success) {
-      setInputValue('');
-      setSharesToProcess(null);
-      setEthToWrapValue('');
     }
   };
 
