@@ -128,11 +128,7 @@ export default function FlashLoanHelperHandler({ helperType }: FlashLoanHelperHa
 
     setHasInsufficientBalance(false);
 
-    if (helperType === 'redeem') {
-      setUseEthWrapToWSTETH(false);
-    } else {
-      setUseEthWrapToWSTETH(true);
-    }
+    setUseEthWrapToWSTETH(helperType !== 'redeem');
 
     setWrapError('');
     setWrapSuccess('');

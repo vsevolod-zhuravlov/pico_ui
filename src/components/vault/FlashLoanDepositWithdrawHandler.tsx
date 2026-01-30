@@ -136,11 +136,7 @@ export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoa
     setWrapError('');
     setWrapSuccess('');
 
-    if (actionType === 'withdraw') {
-      setUseEthWrapToWSTETH(false);
-    } else {
-      setUseEthWrapToWSTETH(true);
-    }
+    setUseEthWrapToWSTETH(actionType !== 'withdraw');
 
     setShowWarning(false);
   }, [actionType]);
