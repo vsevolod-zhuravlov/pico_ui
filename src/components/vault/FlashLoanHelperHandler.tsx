@@ -493,7 +493,7 @@ export default function FlashLoanHelperHandler({ helperType }: FlashLoanHelperHa
           </>
         )}
 
-        {(!inputValue || isInputZeroOrNaN) ? null : isInputMoreThanMax && !flashLoan.loading ? (
+        {isInputZeroOrNaN ? null : isInputMoreThanMax && !flashLoan.loading ? (
           <WarningMessage
             text="Entered amount higher than max"
           />
@@ -522,7 +522,6 @@ export default function FlashLoanHelperHandler({ helperType }: FlashLoanHelperHa
             flashLoan.loading ||
             flashLoan.isApproving ||
             isWrapping ||
-            !inputValue ||
             !sharesToProcess ||
             hasInsufficientBalance ||
             isErrorLoadingPreview ||

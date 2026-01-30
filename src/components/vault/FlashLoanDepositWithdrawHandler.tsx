@@ -591,7 +591,7 @@ export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoa
           </>
         )}
 
-        {(!inputValue || isInputZeroOrNaN) ? null :
+        {(isInputZeroOrNaN) ? null :
           isInputMoreThanMax && !flashLoan.loading && !isWrapping ?
             (
               <WarningMessage
@@ -607,7 +607,7 @@ export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoa
               />
             ) : isErrorLoadingPreview ? (
               <ErrorMessage text="Error loading preview." />
-            ) : estimatedShares !== null && estimatedShares > 0n && previewData && !!inputValue ? (
+            ) : estimatedShares !== null && estimatedShares > 0n && previewData && !isInputZeroOrNaN ? (
               <PreviewBox
                 receive={receive}
                 provide={provide}
@@ -620,7 +620,6 @@ export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoa
           type="submit"
           disabled={
             flashLoan.loading ||
-            !inputValue ||
             !estimatedShares ||
             estimatedShares <= 0n ||
             flashLoan.isApproving ||
