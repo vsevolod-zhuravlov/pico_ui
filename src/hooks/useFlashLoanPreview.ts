@@ -25,7 +25,6 @@ interface UseFlashLoanPreviewParams {
 }
 
 interface UseFlashLoanPreviewReturn {
-  hasLoadedPreviewOnce: boolean;
   previewData: PreviewData | null;
   receive: Array<{ amount: bigint; tokenType: TokenType }>;
   provide: Array<{ amount: bigint; tokenType: TokenType }>;
@@ -40,7 +39,6 @@ export const useFlashLoanPreview = ({
   redeemHelper,
   sharesBalance,
 }: UseFlashLoanPreviewParams): UseFlashLoanPreviewReturn => {
-  const [hasLoadedPreviewOnce, setHasLoadedPreviewOnce] = useState(false);
   const [isErrorLoadingPreview, setIsErrorLoadingPreview] = useState(false);
   const [invalidRebalanceMode, setInvalidRebalanceMode] = useState(false);
   const [previewData, setPreviewData] = useState<PreviewData | null>(null);
@@ -80,8 +78,6 @@ export const useFlashLoanPreview = ({
       amount = reduceByPrecisionBuffer(amount);
 
       setPreviewData({ amount });
-      setHasLoadedPreviewOnce(true);
-
     } catch (err: any) {
       console.error('Error loading preview:', err);
       setIsErrorLoadingPreview(true);
@@ -121,10 +117,6 @@ export const useFlashLoanPreview = ({
   }, [sharesToProcess, helperType, mintHelper, redeemHelper, sharesBalance]);
 
   useEffect(() => {
-    setHasLoadedPreviewOnce(false);
-  }, [sharesToProcess]);
-
-  useEffect(() => {
     setIsErrorLoadingPreview(false);
     setInvalidRebalanceMode(false);
     setPreviewData(null);
@@ -144,7 +136,6 @@ export const useFlashLoanPreview = ({
   }
 
   return {
-    hasLoadedPreviewOnce,
     previewData,
     receive,
     provide,
