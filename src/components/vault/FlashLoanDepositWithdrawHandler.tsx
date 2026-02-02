@@ -91,7 +91,7 @@ export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoa
   const helperAddress = actionType === 'deposit' ? flashLoanMintHelperAddress : flashLoanRedeemHelperAddress;
 
   // Check if this is a wstETH vault that supports ETH input
-  const isWstETHVault = actionType === 'deposit' && collateralToken && isWstETHAddress(collateralTokenAddress || '');
+  const isWstETHVault = collateralToken && isWstETHAddress(collateralTokenAddress || '');
 
   const {
     isLoadingPreview,
@@ -394,7 +394,6 @@ export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoa
   }, [
     previewData,
     estimatedShares,
-    actionType,
     useEthWrapToWSTETH,
     isWstETHVault,
     collateralTokenBalance,
