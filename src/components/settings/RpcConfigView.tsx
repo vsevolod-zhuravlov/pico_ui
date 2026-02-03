@@ -49,22 +49,6 @@ export function RpcConfigView({ selectedNetwork, onBack, onClose }: RpcConfigVie
     setIsLoading(true);
 
     try {
-      const defaultUrl = getDefaultUrl();
-
-      if (defaultUrl && rpcUrl.trim() === defaultUrl) {
-        localStorage.removeItem(`custom_rpc_${selectedNetwork}`);
-        await refreshPublicProvider();
-        setIsCustomRpcSet(false);
-        setSuccess('This is the default RPC URL.');
-        setIsLoading(false);
-        setActiveRpcDisplay(defaultUrl);
-        setRpcUrl('');
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
-        return;
-      }
-
       if (!rpcUrl.startsWith('http://') && !rpcUrl.startsWith('https://')) {
         throw new Error('URL must start with http:// or https://');
       }
