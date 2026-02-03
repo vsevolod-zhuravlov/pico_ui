@@ -23,11 +23,14 @@ export function RpcConfigView({ selectedNetwork, onBack, onClose }: RpcConfigVie
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  const getDefaultUrl = () => {
+    return NETWORK_CONFIGS[selectedNetwork]?.rpcUrls[0] ?? '';
+  };
+
   useEffect(() => {
     // Load current RPC
     const custom = localStorage.getItem(`custom_rpc_${selectedNetwork}`);
-    const config = (NETWORK_CONFIGS as any)[selectedNetwork];
-    const defaultUrl = config ? config.rpcUrls[0] : '';
+    const defaultUrl = getDefaultUrl();
 
     // If custom is set, show it in input. If not, input is empty.
     setRpcUrl(custom || '');
@@ -46,8 +49,7 @@ export function RpcConfigView({ selectedNetwork, onBack, onClose }: RpcConfigVie
     setIsLoading(true);
 
     try {
-      const config = (NETWORK_CONFIGS as any)[selectedNetwork];
-      const defaultUrl = config ? config.rpcUrls[0] : '';
+      const defaultUrl = getDefaultUrl();
 
       if (defaultUrl && rpcUrl.trim() === defaultUrl) {
         localStorage.removeItem(`custom_rpc_${selectedNetwork}`);
@@ -111,10 +113,7 @@ export function RpcConfigView({ selectedNetwork, onBack, onClose }: RpcConfigVie
     setError(null);
 
     try {
-      const config = (NETWORK_CONFIGS as any)[selectedNetwork];
-      if (!config) throw new Error("Unknown network config");
-
-      const defaultUrl = config.rpcUrls[0];
+      const defaultUrl = getDefaultUrl();
       setRpcUrl('');
       setActiveRpcDisplay(defaultUrl);
 
