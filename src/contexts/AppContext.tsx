@@ -114,7 +114,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
   const getDefaultNetwork = useCallback(() => {
     const urlNetwork = getNetworkFromUrl();
-    return urlNetwork ?? '11155111';
+    return urlNetwork ?? '1';
   }, [getNetworkFromUrl]);
 
   useEffect(() => {
