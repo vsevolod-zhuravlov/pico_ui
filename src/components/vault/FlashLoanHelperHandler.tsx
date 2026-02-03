@@ -268,12 +268,9 @@ export default function FlashLoanHelperHandler({ helperType }: FlashLoanHelperHa
       return;
     }
 
-    let isEffectAborted = false;
-
     // Helper type is mint
     const determineRequiredWrapAmount = async () => {
       if (!useEthWrapToWSTETH || !isWstETHVault) {
-        if (isEffectAborted) return;
         setPreviewedWstEthAmount(null);
         setEthToWrapValue('');
         setEffectiveCollateralBalance(collateralTokenBalance);
@@ -288,7 +285,6 @@ export default function FlashLoanHelperHandler({ helperType }: FlashLoanHelperHa
 
       // If wrapping is enabled, we need previewData to calculate wrap amount
       if (!previewData) {
-        if (isEffectAborted) return;
         setHasInsufficientBalance(false);
         return;
       }
@@ -301,8 +297,6 @@ export default function FlashLoanHelperHandler({ helperType }: FlashLoanHelperHa
         ethBalance,
         gasReserveWei: GAS_RESERVE_WEI
       });
-
-      if (isEffectAborted) return;
 
       if (result.shouldWrap) {
         const ethToWrap = applyMintSlippage(parseEther(result.ethToWrapValue));
@@ -328,10 +322,6 @@ export default function FlashLoanHelperHandler({ helperType }: FlashLoanHelperHa
     };
 
     determineRequiredWrapAmount();
-
-    return () => {
-      isEffectAborted = true;
-    };
   }, [
     previewData,
     sharesToProcess,

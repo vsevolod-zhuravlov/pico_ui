@@ -342,12 +342,9 @@ export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoa
       return;
     }
 
-    let isEffectAborted = false;
-
     // Helper type is deposit (mint)
     const determineRequiredWrapAmount = async () => {
       if (!useEthWrapToWSTETH || !isWstETHVault) {
-        if (isEffectAborted) return;
         setPreviewedWstEthAmount(null);
         setEthToWrapValue('');
 
@@ -363,7 +360,6 @@ export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoa
 
       // If wrapping is enabled, we need previewData to calculate wrap amount
       if (!previewData) {
-        if (isEffectAborted) return;
         setHasInsufficientBalance(false);
         return;
       }
@@ -376,8 +372,6 @@ export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoa
         ethBalance,
         gasReserveWei: GAS_RESERVE_WEI
       });
-
-      if (isEffectAborted) return;
 
       if (result.shouldWrap) {
         const ethToWrap = applyMintSlippage(parseEther(result.ethToWrapValue));
@@ -397,10 +391,6 @@ export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoa
     };
 
     determineRequiredWrapAmount();
-
-    return () => {
-      isEffectAborted = true;
-    };
   }, [
     previewData,
     estimatedShares,
