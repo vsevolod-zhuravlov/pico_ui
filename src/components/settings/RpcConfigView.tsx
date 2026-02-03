@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { SettingsHeader } from './SettingsHeader';
-import { NETWORK_CONFIGS, SEPOLIA_CHAIN_ID_STRING, MAINNET_CHAIN_ID_STRING } from '@/constants';
+import { NETWORK_CONFIGS } from '@/constants';
 import { useAppContext } from '@/contexts';
 import { JsonRpcProvider } from 'ethers';
 import { WarningMessage, SuccessMessage } from '@/components/ui';
@@ -72,12 +72,8 @@ export function RpcConfigView({ selectedNetwork, onBack, onClose }: RpcConfigVie
 
       const returnedChainId = network.chainId.toString();
 
-      let expectedChainIdBigInt;
-      if (selectedNetwork === SEPOLIA_CHAIN_ID_STRING) {
-        expectedChainIdBigInt = 11155111n;
-      } else if (selectedNetwork === MAINNET_CHAIN_ID_STRING) {
-        expectedChainIdBigInt = 1n;
-      }
+      const networkConfig = NETWORK_CONFIGS[selectedNetwork];
+      const expectedChainIdBigInt = networkConfig?.chainIdBigInt;
 
       if (expectedChainIdBigInt && network.chainId !== expectedChainIdBigInt) {
         throw new Error(`Chain ID mismatch. Expected ${expectedChainIdBigInt}, got ${returnedChainId}`);
@@ -147,7 +143,7 @@ export function RpcConfigView({ selectedNetwork, onBack, onClose }: RpcConfigVie
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Active RPC URL for {selectedNetwork === SEPOLIA_CHAIN_ID_STRING ? 'Sepolia' : 'Ethereum'}
+          Active RPC URL for {NETWORK_CONFIGS[selectedNetwork]?.name ?? 'Network'}
         </label>
         <div className="mb-2 p-2 bg-gray-50 rounded border border-gray-200 text-xs text-gray-600 font-mono max-w-[286.4px] overflow-x-auto whitespace-nowrap select-text cursor-text">
           {activeRpcDisplay}
