@@ -185,23 +185,37 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [currentNetwork, signer]);
 
+  const createPublicProvider = useCallback((networkId: string): JsonRpcProvider | null => {
+    const config = NETWORK_CONFIGS[networkId];
+    if (!config) return null;
+
+    const customRpc = localStorage.getItem(`custom_rpc_${networkId}`);
+    const rpcUrl = customRpc || config.rpcUrls[0];
+    return new JsonRpcProvider(rpcUrl);
+  }, []);
+
+  const refreshPublicProvider = useCallback(async () => {
+    const networkId = currentNetwork || getDefaultNetwork();
+    const newProvider = createPublicProvider(networkId);
+    if (newProvider) {
+      setPublicProvider(newProvider);
+    }
+  }, [currentNetwork, getDefaultNetwork, createPublicProvider]);
+
   useEffect(() => {
     const defaultNetwork = getDefaultNetwork();
-    const networkConfig = (NETWORK_CONFIGS as any)[defaultNetwork];
-    if (networkConfig) {
-      const customRpc = localStorage.getItem(`custom_rpc_${defaultNetwork}`);
-      const rpcUrl = customRpc || networkConfig.rpcUrls[0];
-      const newPublicProvider = new JsonRpcProvider(rpcUrl);
-      setPublicProvider(newPublicProvider);
+    const newProvider = createPublicProvider(defaultNetwork);
+    if (newProvider) {
+      setPublicProvider(newProvider);
       setCurrentNetwork(defaultNetwork);
     } else {
       setPublicProvider(null);
       setCurrentNetwork(null);
     }
-  }, [getDefaultNetwork]);
+  }, [getDefaultNetwork, createPublicProvider]);
 
   const switchToNetwork = useCallback(async (chainId: string) => {
-    const networkConfig = (NETWORK_CONFIGS as any)[chainId];
+    const networkConfig = NETWORK_CONFIGS[chainId];
     if (!networkConfig) {
       console.error('Unknown network chain ID:', chainId);
       return;
@@ -217,10 +231,10 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
       window.history.pushState({}, '', url.toString());
     }
 
-    const customRpc = localStorage.getItem(`custom_rpc_${chainId}`);
-    const rpcUrl = customRpc || networkConfig.rpcUrls[0];
-    const newPublicProvider = new JsonRpcProvider(rpcUrl);
-    setPublicProvider(newPublicProvider);
+    const newPublicProvider = createPublicProvider(chainId);
+    if (newPublicProvider) {
+      setPublicProvider(newPublicProvider);
+    }
     setCurrentNetwork(chainId);
 
     if (provider) {
@@ -242,7 +256,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         }
       }
     }
-  }, [provider]);
+  }, [provider, createPublicProvider]);
 
   useEffect(() => {
     const autoSwitchToUrlNetwork = async () => {
@@ -308,11 +322,8 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
       // Only do this if there's no URL network param, or if it matches
       const urlNetwork = getNetworkFromUrl();
       if (!urlNetwork || urlNetwork === chainIdString) {
-        const networkConfig = (NETWORK_CONFIGS as any)[chainIdString];
-        if (networkConfig) {
-          const customRpc = localStorage.getItem(`custom_rpc_${chainIdString}`);
-          const rpcUrl = customRpc || networkConfig.rpcUrls[0];
-          const newPublicProvider = new JsonRpcProvider(rpcUrl);
+        const newPublicProvider = createPublicProvider(chainIdString);
+        if (newPublicProvider) {
           setPublicProvider(newPublicProvider);
         }
       }
@@ -441,7 +452,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         const chainIdString = chainIdBigInt.toString();
 
         // Update URL parameter to match the new network
-        const networkConfig = (NETWORK_CONFIGS as any)[chainIdString];
+        const networkConfig = NETWORK_CONFIGS[chainIdString];
         if (networkConfig) {
           const urlParam = Object.keys(URL_PARAM_TO_CHAIN_ID).find(
             key => URL_PARAM_TO_CHAIN_ID[key as keyof typeof URL_PARAM_TO_CHAIN_ID] === chainIdString
@@ -454,10 +465,10 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
           }
 
           // Update publicProvider to match the new network
-          const customRpc = localStorage.getItem(`custom_rpc_${chainIdString}`);
-          const rpcUrl = customRpc || networkConfig.rpcUrls[0];
-          const newPublicProvider = new JsonRpcProvider(rpcUrl);
-          setPublicProvider(newPublicProvider);
+          const newPublicProvider = createPublicProvider(chainIdString);
+          if (newPublicProvider) {
+            setPublicProvider(newPublicProvider);
+          }
         }
 
         // Update all wallet connection state (this also sets currentNetwork, chainId, etc.)
@@ -674,16 +685,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     isTermsBlockingUI,
     checkTermsStatus,
     signTermsOfUse,
-    refreshPublicProvider: async () => {
-      const networkId = currentNetwork || getDefaultNetwork();
-      const config = (NETWORK_CONFIGS as any)[networkId];
-      if (config) {
-        const customRpc = localStorage.getItem(`custom_rpc_${networkId}`);
-        const rpcUrl = customRpc || config.rpcUrls[0];
-        const newPublicProvider = new JsonRpcProvider(rpcUrl);
-        setPublicProvider(newPublicProvider);
-      }
-    }
+    refreshPublicProvider
   };
 
   return <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>;
