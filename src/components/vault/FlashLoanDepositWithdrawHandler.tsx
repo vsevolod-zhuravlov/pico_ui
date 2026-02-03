@@ -224,7 +224,7 @@ export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoa
   });
 
   const calculateShares = async () => {
-    if (!inputValue || !vaultLens) {
+    if (isInputZeroOrNaN || !vaultLens) {
       setEstimatedShares(null);
       setShowWarning(false);
       return;
@@ -325,7 +325,7 @@ export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoa
 
   useEffect(() => {
     // Reset state if input is empty or invalid
-    if (!inputValue || !estimatedShares || estimatedShares <= 0n) {
+    if (isInputZeroOrNaN || !estimatedShares || estimatedShares <= 0n) {
       setPreviewedWstEthAmount(null);
       setEthToWrapValue('');
       setHasInsufficientBalance(false);
