@@ -91,9 +91,9 @@ export default function VaultInfoDropdown() {
   const capacityData = useMemo(() => {
     if (isMainnet && totalAssets && maxTotalAssetsInUnderlying && tokenPrice && collateralTokenPrice) {
       const deposited = parseFloat(totalAssets);
-      const max = parseFloat(maxTotalAssetsInUnderlying);
+      const maxUsd = parseFloat(maxTotalAssetsInUnderlying);
 
-      if (max <= 0) {
+      if (maxUsd <= 0) {
         return {
           percentage: 0,
           depositedUsd: "0",
@@ -108,11 +108,11 @@ export default function VaultInfoDropdown() {
         };
       }
 
-      const percentage = Math.min((deposited / max) * 100, 100);
       const depositedUsd = deposited * tokenPrice;
-      const maxUsd = max * tokenPrice;
+      const percentage = Math.min((depositedUsd / maxUsd) * 100, 100);
       const depositedCollateral = (deposited * tokenPrice) / collateralTokenPrice;
-      const maxCollateral = (max * tokenPrice) / collateralTokenPrice;
+      const maxCollateral = maxUsd / collateralTokenPrice;
+      const maxBorrowAmount = maxUsd / tokenPrice;
 
       let percentageDisplay: string;
       if (percentage < 0.01 && percentage > 0) {
@@ -127,7 +127,7 @@ export default function VaultInfoDropdown() {
         depositedUsd: Math.floor(depositedUsd).toLocaleString('en-US'),
         maxUsd: Math.floor(maxUsd).toLocaleString('en-US'),
         depositedBorrow: Math.floor(deposited).toLocaleString('en-US'),
-        maxBorrow: Math.floor(max).toLocaleString('en-US'),
+        maxBorrow: Math.floor(maxBorrowAmount).toLocaleString('en-US'),
         depositedCollateral: Math.floor(depositedCollateral).toLocaleString('en-US'),
         maxCollateral: Math.floor(maxCollateral).toLocaleString('en-US'),
         borrowSymbol: formatTokenSymbol(borrowTokenSymbol || 'ETH'),

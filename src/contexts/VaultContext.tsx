@@ -429,7 +429,7 @@ export const VaultContextProvider = ({ children, vaultAddress, params }: { child
       setVaultMaxWithdrawCollateral(formatUnits(rawVaultMaxWithdrawCollateral, collateralTokenDecimals));
       setMaxLowLevelRebalanceShares(formatUnits(rawMaxLowLevelRebalanceShares, sharesDecimals));
       setTotalAssets(formatUnits(rawTotalAssets, borrowTokenDecimals));
-      setMaxTotalAssetsInUnderlying(formatUnits(rawMaxTotalAssetsInUnderlying, borrowTokenDecimals));
+      setMaxTotalAssetsInUnderlying(formatUnits(rawMaxTotalAssetsInUnderlying, 18));
     } catch (err) {
       console.error('Error loading vault limits:', err);
     }
