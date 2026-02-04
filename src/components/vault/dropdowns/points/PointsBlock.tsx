@@ -53,6 +53,10 @@ export function PointsBlock() {
 
   const yourRate = boostedRate.toFixed(2);
 
+  // We depend on userPoints here to ensure we don't show earnings before we've confirmed the user has valid points data.
+  // However, this delays showing earnings after a fresh deposit until points are updated/fetched.
+  // @todo: Implement backend support to calculate/return daily earnings immediately after deposit,
+  // independent of the periodic points update cycle, so we can remove the userPoints dependency here.
   const dailyEarnings = useMemo(() => {
     if (!sharesBalance || !userPoints) return '0.00';
     const balance = parseFloat(sharesBalance);
