@@ -72,12 +72,16 @@ function VaultContent() {
           }
         </div>
       </div>
-      <div className="mb-4">
-        <PointsDropdown />
-      </div>
-      <div className="mb-4">
-        <VaultInfoDropdown />
-      </div>
+      {isMainnet &&
+        <>
+          <div className={`mb-4 ${isUIDisabled ? 'opacity-50 pointer-events-none' : ''}`}>
+            <PointsDropdown />
+          </div>
+          <div className={`mb-4 ${isUIDisabled ? 'opacity-50 pointer-events-none' : ''}`}>
+            <VaultInfoDropdown />
+          </div>
+        </>
+      }
       {hasFlashLoanHelper && (
         <>
           <div className={`mb-4 ${isUIDisabled ? 'opacity-50 pointer-events-none' : ''}`}>
