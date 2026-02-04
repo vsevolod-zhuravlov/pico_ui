@@ -13,7 +13,7 @@ export default function VaultInfoDropdown() {
     totalAssets, // Deposited TVL
     maxTotalAssetsInUnderlying, // Max capacity
     collateralTokenPrice,
-    borrowTokenPrice: tokenPrice,
+    borrowTokenPrice,
     collateralTokenSymbol,
     borrowTokenSymbol
   } = useVaultContext();
@@ -33,11 +33,11 @@ export default function VaultInfoDropdown() {
 
   // Leveraged TVL Calculations
   const leveragedTvlData = useMemo(() => {
-    if (isMainnet && tvl && collateralTokenPrice && tokenPrice) {
+    if (isMainnet && tvl && collateralTokenPrice && borrowTokenPrice) {
       const amount = parseFloat(tvl);
       const usd = amount * collateralTokenPrice;
       const collateralAmount = amount;
-      const borrowAmount = (amount * collateralTokenPrice) / tokenPrice;
+      const borrowAmount = (amount * collateralTokenPrice) / borrowTokenPrice;
 
       return {
         usd: Math.floor(usd).toLocaleString('en-US'),
@@ -57,15 +57,15 @@ export default function VaultInfoDropdown() {
       borrowSymbol: "ETH",
       isReal: false
     };
-  }, [isMainnet, tvl, collateralTokenPrice, tokenPrice, collateralTokenSymbol, borrowTokenSymbol]);
+  }, [isMainnet, tvl, collateralTokenPrice, borrowTokenPrice, collateralTokenSymbol, borrowTokenSymbol]);
 
   // Deposited TVL Calculations
   const depositedTvlData = useMemo(() => {
-    if (isMainnet && totalAssets && tokenPrice && collateralTokenPrice) {
+    if (isMainnet && totalAssets && borrowTokenPrice && collateralTokenPrice) {
       const amount = parseFloat(totalAssets);
-      const usd = amount * tokenPrice;
+      const usd = amount * borrowTokenPrice;
       const borrowAmount = amount;
-      const collateralAmount = (amount * tokenPrice) / collateralTokenPrice;
+      const collateralAmount = (amount * borrowTokenPrice) / collateralTokenPrice;
 
       return {
         usd: Math.floor(usd).toLocaleString('en-US'),
@@ -85,11 +85,11 @@ export default function VaultInfoDropdown() {
       borrowSymbol: "ETH",
       isReal: false
     };
-  }, [isMainnet, totalAssets, tokenPrice, collateralTokenPrice, collateralTokenSymbol, borrowTokenSymbol]);
+  }, [isMainnet, totalAssets, borrowTokenPrice, collateralTokenPrice, collateralTokenSymbol, borrowTokenSymbol]);
 
   // Capacity Calculations
   const capacityData = useMemo(() => {
-    if (isMainnet && totalAssets && maxTotalAssetsInUnderlying && tokenPrice && collateralTokenPrice) {
+    if (isMainnet && totalAssets && maxTotalAssetsInUnderlying && borrowTokenPrice && collateralTokenPrice) {
       const deposited = parseFloat(totalAssets);
       const maxUsd = parseFloat(maxTotalAssetsInUnderlying);
 
@@ -108,11 +108,11 @@ export default function VaultInfoDropdown() {
         };
       }
 
-      const depositedUsd = deposited * tokenPrice;
+      const depositedUsd = deposited * borrowTokenPrice;
       const percentage = Math.min((depositedUsd / maxUsd) * 100, 100);
-      const depositedCollateral = (deposited * tokenPrice) / collateralTokenPrice;
+      const depositedCollateral = (deposited * borrowTokenPrice) / collateralTokenPrice;
       const maxCollateral = maxUsd / collateralTokenPrice;
-      const maxBorrowAmount = maxUsd / tokenPrice;
+      const maxBorrowAmount = maxUsd / borrowTokenPrice;
 
       let percentageDisplay: string;
       if (percentage < 0.01 && percentage > 0) {
@@ -149,7 +149,7 @@ export default function VaultInfoDropdown() {
       collateralSymbol: "wstETH",
       isReal: false
     };
-  }, [isMainnet, totalAssets, maxTotalAssetsInUnderlying, tokenPrice, collateralTokenPrice, borrowTokenSymbol, collateralTokenSymbol]);
+  }, [isMainnet, totalAssets, maxTotalAssetsInUnderlying, borrowTokenPrice, collateralTokenPrice, borrowTokenSymbol, collateralTokenSymbol]);
 
   return (
     <div className="relative rounded-lg bg-white mb-4 shadow-sm border border-gray-100">
