@@ -56,7 +56,7 @@ export const useFlashLoanPreview = ({
       setPreviewData(null);
       return;
     }
-    
+
     setIsErrorLoadingPreview(false);
     setInvalidRebalanceMode(false);
     setIsLoadingPreview(true);
@@ -93,7 +93,7 @@ export const useFlashLoanPreview = ({
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [sharesToProcess, helperType, sharesBalance]);
+  }, [sharesToProcess, helperType, sharesBalance, mintHelper, redeemHelper]);
 
   // Reset preview data and errors when helper type changes
   useEffect(() => {

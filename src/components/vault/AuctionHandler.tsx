@@ -90,7 +90,7 @@ export default function AuctionHandler({ futureBorrowAssets, futureCollateralAss
     setPreviewData(null);
     setMaxValue(null);
     loadMaxValue();
-  }, [auctionType, borrowTokenDecimals, collateralTokenDecimals, borrowTokenBalance, collateralTokenBalance, futureBorrowAssets, futureCollateralAssets]);
+  }, [auctionType, borrowTokenDecimals, collateralTokenDecimals, borrowTokenBalance, collateralTokenBalance, futureBorrowAssets, futureCollateralAssets, vaultLens]);
 
   const getDecimalsForAuctionType = () => {
     if (auctionType === 'provide_borrow') {
@@ -180,7 +180,7 @@ export default function AuctionHandler({ futureBorrowAssets, futureCollateralAss
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [amount, auctionType]);
+  }, [amount, auctionType, vaultLens]);
 
   const checkAndApproveRequiredAssets = async () => {
     if (!address || !vaultAddress || !amount) {
