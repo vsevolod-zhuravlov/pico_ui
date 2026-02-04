@@ -70,9 +70,6 @@ export function RpcConfigView({ selectedNetwork, onBack, onClose }: RpcConfigVie
       setIsCustomRpcSet(true);
       setActiveRpcDisplay(rpcUrl);
       setSuccess('RPC updated successfully! Reloading...');
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
     } catch (err: any) {
       console.error("RPC Validation failed:", err);
       const msg = err.message || '';
@@ -105,9 +102,6 @@ export function RpcConfigView({ selectedNetwork, onBack, onClose }: RpcConfigVie
       await refreshPublicProvider();
       setIsCustomRpcSet(false);
       setSuccess('Reset to default successfully. Reloading...');
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
     } catch (err: any) {
       setError('Failed to reset RPC');
     } finally {
