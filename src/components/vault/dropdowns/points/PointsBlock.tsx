@@ -43,9 +43,14 @@ export function PointsBlock() {
   const boostMultiplier = hasNft ? '1.42x' : '1.0x';
   const boostDescription = hasNft ? '(42% boost with NFTs)' : '(mint 42 NFT for 42% boost)';
 
-  // Base rate calculation
   const baseRate = pointsRate || 0;
-  const boostedRate = hasNft ? baseRate * 1.42 : baseRate;
+  const nftBoostMultiplier = 1.42;
+
+  const boostedRate =
+    hasNft
+      ? baseRate * nftBoostMultiplier
+      : baseRate;
+
   const yourRate = boostedRate.toFixed(2);
 
   const dailyEarnings = useMemo(() => {
@@ -75,14 +80,23 @@ export function PointsBlock() {
         <div className="flex flex-col md:flex-row gap-8 md:gap-16">
           <LabeledValue
             label="Your Points"
-            value={!isLoading && (userPoints !== null ? formatPoints(userPoints) : '0.00')}
+            value={
+              isLoading ?
+                "Loading..." :
+                (userPoints !== null ? formatPoints(userPoints) : '0.00')
+            }
             subtitle={
-              <>
-                <span className="text-[0.85rem] text-gray-900 font-normal mr-1">
-                  Daily Earnings:
-                </span>
-                {dailyEarnings}
-              </>
+              <div className='w-fit'>
+                {isLoading ?
+                  "Loading..." :
+                  <>
+                    <span className="text-[0.85rem] text-gray-900 font-normal mr-1">
+                      Daily Earnings:
+                    </span>
+                    {dailyEarnings}
+                  </>
+                }
+              </div>
             }
             className="min-w-[273.51px] mb-4"
           />

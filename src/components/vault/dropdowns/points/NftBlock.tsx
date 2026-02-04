@@ -48,7 +48,18 @@ export function NftBlock({ className }: NftBlockProps) {
   const displayedNfts = userNfts.slice(0, 3);
   const remainingCount = userNfts.length - 3;
 
-  if (isLoadingNfts) return null;
+  if (isLoadingNfts) {
+    return (
+      <div className={`flex flex-col md:flex-row md:items-center gap-4 ${className || ''}`}>
+        <div className="w-20 h-20 min-w-[5rem] rounded-lg bg-gray-200 animate-pulse border-2 border-gray-100/50" />
+        <div className="mb-1 flex-1">
+          <div className="h-4 bg-gray-200 rounded w-24 mb-2 animate-pulse" />
+          <div className="h-3 bg-gray-200 rounded w-full mb-1 animate-pulse" />
+          <div className="h-3 bg-gray-200 rounded w-3/4 animate-pulse" />
+        </div>
+      </div>
+    );
+  }
 
   if (!hasNft) {
     return (
@@ -98,7 +109,7 @@ export function NftBlock({ className }: NftBlockProps) {
             <div className='text-gray-700 font-light'>{remainingCount > 0 && <span> and {remainingCount} more</span>}</div>
           </div>
           <div className='text-sm text-gray-700 font-normal'>
-            This {userNfts.length > 1 ? 'NFTs grants' : 'NFT grants'} you a permanent 42% points boost and early access to all future leveraged vaults.
+            {userNfts.length > 1 ? 'These NFTs grant' : 'This NFT grants'} you a permanent 42% points boost and early access to all future leveraged vaults.
           </div>
         </div>
       </div>
