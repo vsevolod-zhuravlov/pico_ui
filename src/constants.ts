@@ -1,4 +1,5 @@
 import { parseEther } from "ethers";
+import { ActionType } from '@/types/actions';
 
 const SEPOLIA_WETH_ADDRESSES = [
   '0x2d5ee574e710219a521449679a4a7f2b43f046ad',
@@ -104,3 +105,10 @@ export const SAFE_HELPER_ADDRESSES: Record<string, { borrow: string; collateral:
     collateral: '0x25cd7dc2ffb7c453241a8c530e73c34bd642809c'
   }
 };
+
+export const ACTIONS_TABS: { value: ActionType; label: string }[] = [
+  { value: 'deposit', label: 'Deposit' },
+  { value: 'redeem', label: 'Redeem' },
+  { value: 'mint', label: 'Mint' },
+  { value: 'withdraw', label: 'Withdraw' },
+];
