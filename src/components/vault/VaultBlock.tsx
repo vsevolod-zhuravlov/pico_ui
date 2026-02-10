@@ -7,7 +7,6 @@ import { useAdaptiveInterval, useVaultApy, useVaultPointsRate } from "@/hooks";
 import { Vault__factory, ERC20__factory, WhitelistRegistry__factory } from "@/typechain-types";
 import { NumberDisplay, TransitionLoader } from "@/components/ui";
 import vaultsConfig from "../../../vaults.config.json";
-import signaturesConfig from "../../../signatures.config.json";
 
 interface VaultBlockProps {
   address: string;
@@ -23,7 +22,6 @@ interface StaticVaultData {
 
 interface WhitelistData {
   isWhitelisted: boolean | null;
-  hasSignature: boolean;
 }
 
 interface DynamicVaultData {
@@ -82,11 +80,9 @@ export default function VaultBlock({ address }: VaultBlockProps) {
 
   const [whitelistData, setWhitelistData] = useState<WhitelistData>({
     isWhitelisted: null,
-    hasSignature: false,
   });
 
   const { publicProvider, currentNetwork, address: userAddress, isConnected } = useAppContext();
-
 
   const vaultConfig = useMemo(() => {
     if (!currentNetwork) return;
@@ -213,27 +209,6 @@ export default function VaultBlock({ address }: VaultBlockProps) {
     }
   }, [vaultContract]);
 
-  const checkUserSignature = useCallback(() => {
-    if (!userAddress || !currentNetwork) {
-      setWhitelistData(prev => ({ ...prev, hasSignature: false }));
-      return;
-    }
-
-    const networkSignatures = (signaturesConfig as any)[currentNetwork];
-    const vaultSignatures = networkSignatures?.vaults?.[address.toLowerCase()];
-    const signaturesMap = vaultSignatures?.signatures;
-
-    if (!signaturesMap) {
-      setWhitelistData(prev => ({ ...prev, hasSignature: false }));
-      return;
-    }
-
-    const addressLower = userAddress.toLowerCase();
-    const hasSignature = !!signaturesMap[addressLower];
-
-    setWhitelistData(prev => ({ ...prev, hasSignature }));
-  }, [userAddress, currentNetwork, address]);
-
   const checkUserWhitelist = useCallback(async () => {
     if (!vaultContract || !userAddress || !isConnected || staticData.isWhitelistActivated === null) {
       return;
@@ -298,9 +273,7 @@ export default function VaultBlock({ address }: VaultBlockProps) {
   }, [vaultContract, loadWhitelistActivation]);
 
   // Check user signature when address or network changes
-  useEffect(() => {
-    checkUserSignature();
-  }, [address, currentNetwork, checkUserSignature]);
+
 
   // Check user whitelist status when whitelist activation status is known
   useEffect(() => {
@@ -371,8 +344,7 @@ export default function VaultBlock({ address }: VaultBlockProps) {
         apy: apyData,
         pointsRate,
         isWhitelistActivated: staticData.isWhitelistActivated,
-        isWhitelisted: whitelistData.isWhitelisted,
-        hasSignature: whitelistData.hasSignature
+        isWhitelisted: whitelistData.isWhitelisted
       }}
       className="wrapper block w-full bg-gray-50 transition-colors border border-gray-50 rounded-lg mb-4 last:mb-0 p-3">
       <div className="w-full">

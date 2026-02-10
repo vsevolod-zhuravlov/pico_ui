@@ -135,7 +135,6 @@ interface Params {
   pointsRate: number | null,
   isWhitelistActivated: boolean | null,
   isWhitelisted: boolean | null,
-  hasSignature: boolean | undefined
 }
 
 const VaultContext = createContext<VaultContextType | undefined>(undefined);
@@ -212,7 +211,6 @@ export const VaultContextProvider = ({ children, vaultAddress, params }: { child
   const [isActivatingWhitelist, setIsActivatingWhitelist] = useState<boolean>(false);
   const [whitelistError, setWhitelistError] = useState<string | null>(null);
   const [hasUsedInitialWhitelistParams, setHasUsedInitialWhitelistParams] = useState<boolean>(false);
-  const [hasUsedInitialSignatureParams, setHasUsedInitialSignatureParams] = useState<boolean>(false);
   const [isRefreshingBalances, setIsRefreshingBalances] = useState<boolean>(false);
   const [borrowTokenPrice, setBorrowTokenPrice] = useState<number | null>(null);
   const [collateralTokenPrice, setCollateralTokenPrice] = useState<number | null>(null);
@@ -704,32 +702,15 @@ export const VaultContextProvider = ({ children, vaultAddress, params }: { child
       return;
     }
 
-    // On first load, if we have params - consume them, if user switched accounts - strictly check
-    const shouldConsumeParams = !hasUsedInitialSignatureParams && params.hasSignature !== undefined;
-
-    if (shouldConsumeParams) {
-      setHasUsedInitialSignatureParams(true);
-      setHasSignature(params.hasSignature ?? false);
-
-      // If params say we have a signature, load it
-      if (params.hasSignature) {
-        const data = getSignatureData(address);
-        if (data) {
-          setSignature({ v: data.v, r: data.r, s: data.s });
-        }
-      }
+    const data = getSignatureData(address);
+    if (data) {
+      setHasSignature(true);
+      setSignature({ v: data.v, r: data.r, s: data.s });
     } else {
-      // Standard check for current address (account switching logic)
-      const data = getSignatureData(address);
-      if (data) {
-        setHasSignature(true);
-        setSignature({ v: data.v, r: data.r, s: data.s });
-      } else {
-        setHasSignature(false);
-        setSignature(null);
-      }
+      setHasSignature(false);
+      setSignature(null);
     }
-  }, [address, params.hasSignature, hasUsedInitialSignatureParams, getSignatureData]);
+  }, [address, getSignatureData]);
 
   // NFT Logic
   useEffect(() => {
