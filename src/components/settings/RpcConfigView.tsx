@@ -125,7 +125,10 @@ export function RpcConfigView({ selectedNetwork, onBack, onClose }: RpcConfigVie
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Active RPC URL for {NETWORK_CONFIGS[selectedNetwork]?.name ?? 'Network'}
         </label>
-        <div className="mb-2 p-2 bg-gray-50 rounded border border-gray-200 text-xs text-gray-600 font-mono max-w-[286.4px] overflow-x-auto whitespace-nowrap select-text cursor-text">
+        <div
+          className="mb-2 p-2 bg-gray-50 rounded border border-gray-200 text-xs text-gray-600 font-mono max-w-[286.4px] overflow-x-auto whitespace-nowrap select-text cursor-text"
+          style={{ colorScheme: 'light' }}
+        >
           {activeRpcDisplay}
         </div>
 
