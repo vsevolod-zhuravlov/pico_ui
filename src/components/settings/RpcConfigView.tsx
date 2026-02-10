@@ -16,7 +16,7 @@ export function RpcConfigView({ selectedNetwork, onBack, onClose }: RpcConfigVie
 
   const [rpcUrl, setRpcUrl] = useState<string>('');
   const [activeRpcDisplay, setActiveRpcDisplay] = useState<string>('');
-  const [defaultRpcDisplay, setDefaultRpcDisplay] = useState<string>('');
+
   const [isCustomRpcSet, setIsCustomRpcSet] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -36,7 +36,7 @@ export function RpcConfigView({ selectedNetwork, onBack, onClose }: RpcConfigVie
     setRpcUrl(custom || '');
     // Active is custom if exists, else it's default
     setActiveRpcDisplay(custom || defaultUrl);
-    setDefaultRpcDisplay(defaultUrl);
+
 
     setIsCustomRpcSet(!!custom);
     setError(null);
@@ -65,11 +65,15 @@ export function RpcConfigView({ selectedNetwork, onBack, onClose }: RpcConfigVie
         throw new Error(`Chain ID mismatch. Expected ${expectedChainIdBigInt}, got ${returnedChainId}`);
       }
 
-      localStorage.setItem(`custom_rpc_${selectedNetwork}`, rpcUrl);
-      await refreshPublicProvider();
+      const currentStored = localStorage.getItem(`custom_rpc_${selectedNetwork}`);
+      if (currentStored !== rpcUrl) {
+        localStorage.setItem(`custom_rpc_${selectedNetwork}`, rpcUrl);
+        await refreshPublicProvider();
+      }
+
       setIsCustomRpcSet(true);
       setActiveRpcDisplay(rpcUrl);
-      setSuccess('RPC updated successfully! Reloading...');
+      setSuccess('RPC updated successfully!');
     } catch (err: any) {
       console.error("RPC Validation failed:", err);
       const msg = err.message || '';
@@ -101,7 +105,7 @@ export function RpcConfigView({ selectedNetwork, onBack, onClose }: RpcConfigVie
       localStorage.removeItem(`custom_rpc_${selectedNetwork}`);
       await refreshPublicProvider();
       setIsCustomRpcSet(false);
-      setSuccess('Reset to default successfully. Reloading...');
+      setSuccess('Reset to default successfully.');
     } catch (err: any) {
       setError('Failed to reset RPC');
     } finally {
@@ -111,8 +115,7 @@ export function RpcConfigView({ selectedNetwork, onBack, onClose }: RpcConfigVie
 
   // Determine if save should be disabled
   const isInputEmpty = !rpcUrl || rpcUrl.trim() === '';
-  const isInputDefault = rpcUrl.trim() === defaultRpcDisplay;
-  const isSaveDisabled = isLoading || isInputEmpty || isInputDefault;
+  const isSaveDisabled = isLoading || isInputEmpty;
 
   return (
     <div className="space-y-4">

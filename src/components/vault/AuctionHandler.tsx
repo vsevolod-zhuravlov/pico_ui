@@ -90,7 +90,7 @@ export default function AuctionHandler({ futureBorrowAssets, futureCollateralAss
     setPreviewData(null);
     setMaxValue(null);
     loadMaxValue();
-  }, [auctionType, borrowTokenDecimals, collateralTokenDecimals, borrowTokenBalance, collateralTokenBalance, futureBorrowAssets, futureCollateralAssets, vaultLens]);
+  }, [auctionType, borrowTokenDecimals, collateralTokenDecimals, borrowTokenBalance, collateralTokenBalance, futureBorrowAssets, futureCollateralAssets]);
 
   const getDecimalsForAuctionType = () => {
     if (auctionType === 'provide_borrow') {
