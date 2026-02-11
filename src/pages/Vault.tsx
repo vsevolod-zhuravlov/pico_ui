@@ -16,6 +16,8 @@ import NftMintBanner from '@/components/vault/NftMintBanner';
 import FlashLoanDepositWithdraw from '@/components/vault/FlashLoanDepositWithdraw';
 import FlashLoanDepositWithdrawForm from '@/components/vault/FlashLoanDepositWithdrawForm';
 import ActionsDropdown from '@/components/vault/ActionsDropdown';
+import VaultInfoDropdown from '@/components/vault/dropdowns/vault/Dropdown';
+import PointsDropdown from '@/components/vault/dropdowns/points/Dropdown';
 
 function VaultContent() {
   const {
@@ -60,16 +62,26 @@ function VaultContent() {
         </div>
         <div className="flex-1">
           {
-            isMainnet ? 
-            <div className={`${isUIDisabled ? 'opacity-50 pointer-events-none' : ''}`}>
-              <FlashLoanDepositWithdrawForm />
-            </div> :
-            <div className={partiallyDisabledMode ? 'opacity-50 pointer-events-none' : ''}>
-              <Actions isSafe={vaultConfig && (vaultConfig as any).useSafeActions} />
-            </div>
+            isMainnet ?
+              <div className={`${isUIDisabled ? 'opacity-50 pointer-events-none' : ''}`}>
+                <FlashLoanDepositWithdrawForm />
+              </div> :
+              <div className={partiallyDisabledMode ? 'opacity-50 pointer-events-none' : ''}>
+                <Actions isSafe={vaultConfig && (vaultConfig as any).useSafeActions} />
+              </div>
           }
         </div>
       </div>
+      {isMainnet &&
+        <>
+          <div className={`mb-4 ${isUIDisabled ? 'opacity-50 pointer-events-none' : ''}`}>
+            <PointsDropdown />
+          </div>
+          <div className={`mb-4 ${isUIDisabled ? 'opacity-50 pointer-events-none' : ''}`}>
+            <VaultInfoDropdown />
+          </div>
+        </>
+      }
       {hasFlashLoanHelper && (
         <>
           <div className={`mb-4 ${isUIDisabled ? 'opacity-50 pointer-events-none' : ''}`}>

@@ -26,3 +26,5 @@ export { applyGasSlippage } from './applyGasSlippage';
 export { isShowWrapPreview } from './isShowWrapPreview';
 export { isZeroOrNan } from './isZeroOrNan';
 export * from './api';
+export { getUser42Nfts } from './api';
+export { formatPoints } from './formatPoints';
