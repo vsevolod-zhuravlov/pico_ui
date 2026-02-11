@@ -9,7 +9,9 @@ import {
   formatUsdValue,
   wrapEthToWstEth,
   calculateEthWrapForFlashLoan,
-  processInput
+  processInput,
+  isShowWrapPreview,
+  isZeroOrNan
 } from '@/utils';
 import {
   PreviewBox,
@@ -37,6 +39,7 @@ type ActionType = 'deposit' | 'withdraw';
 
 interface FlashLoanDepositWithdrawHandlerProps {
   actionType: ActionType;
+  setIsProcessing: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const GAS_RESERVE_MULTIPLIER = 3n;
@@ -48,7 +51,10 @@ const MINT_SLIPPAGE_DIVIDER = 1000000;
 const FLASH_LOAN_DEPOSIT_WITHDRAW_PRECISION_DIVIDEND = 99999;
 const FLASH_LOAN_DEPOSIT_WITHDRAW_PRECISION_DIVIDER = 100000;
 
-export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoanDepositWithdrawHandlerProps) {
+export default function FlashLoanDepositWithdrawHandler({
+  actionType,
+  setIsProcessing
+}: FlashLoanDepositWithdrawHandlerProps) {
   const [inputValue, setInputValue] = useState('');
   const [estimatedShares, setEstimatedShares] = useState<bigint | null>(null);
   const [wrapError, setWrapError] = useState<string>('');
@@ -70,8 +76,8 @@ export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoa
   const {
     vaultLens,
     vaultAddress,
-    flashLoanMintHelper,
-    flashLoanRedeemHelper,
+    flashLoanMintHelperLens,
+    flashLoanRedeemHelperLens,
     flashLoanMintHelperAddress,
     flashLoanRedeemHelperAddress,
     collateralToken,
@@ -91,23 +97,20 @@ export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoa
   const helperAddress = actionType === 'deposit' ? flashLoanMintHelperAddress : flashLoanRedeemHelperAddress;
 
   // Check if this is a wstETH vault that supports ETH input
-  const isWstETHVault = actionType === 'deposit' && collateralToken && isWstETHAddress(collateralTokenAddress || '');
+  const isWstETHVault = collateralToken && isWstETHAddress(collateralTokenAddress || '');
 
   const {
-    isLoadingPreview,
     previewData,
     receive,
     provide,
     isErrorLoadingPreview,
     invalidRebalanceMode
   } = useFlashLoanPreview({
-    sharesToProcess: estimatedShares,
     helperType: actionType === 'deposit' ? 'mint' : 'redeem',
-    mintHelper: flashLoanMintHelper,
-    redeemHelper: flashLoanRedeemHelper,
-    collateralTokenDecimals,
+    sharesToProcess: estimatedShares,
     sharesBalance,
-    sharesDecimals,
+    mintHelperLens: flashLoanMintHelperLens,
+    redeemHelperLens: flashLoanRedeemHelperLens
   });
 
   const rawInputSymbol = actionType === 'deposit' ? (isWstETHVault ? 'ETH' : collateralTokenSymbol) : borrowTokenSymbol;
@@ -136,11 +139,12 @@ export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoa
     setWrapError('');
     setWrapSuccess('');
 
-    // Something very ugly here, should be rewrited in future
-    setUseEthWrapToWSTETH(true);
+    setUseEthWrapToWSTETH(actionType !== 'withdraw');
 
     setShowWarning(false);
   }, [actionType]);
+
+  const isInputZeroOrNaN = isZeroOrNan(inputValue);
 
   const isInputMoreThanMax = useIsAmountMoreThanMax({
     amount: inputValue,
@@ -221,7 +225,7 @@ export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoa
   });
 
   const calculateShares = async () => {
-    if (!inputValue || !vaultLens) {
+    if (isInputZeroOrNaN || !vaultLens) {
       setEstimatedShares(null);
       setShowWarning(false);
       return;
@@ -236,8 +240,6 @@ export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoa
       }
 
       if (actionType === 'deposit') {
-        if (!flashLoanMintHelper || !publicProvider) return;
-
         let shares = await vaultLens.convertToShares(inputAmount);
 
         if (!shares) return;
@@ -251,11 +253,11 @@ export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoa
           return;
         }
 
-        if (!flashLoanRedeemHelper) return;
+        if (!flashLoanRedeemHelperLens) return;
 
         let shares = await findSharesForEthWithdraw({
           amount: inputAmount,
-          helper: flashLoanRedeemHelper,
+          helper: flashLoanRedeemHelperLens,
           vaultLens
         });
 
@@ -279,7 +281,7 @@ export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoa
   useEffect(() => {
     const timeoutId = setTimeout(calculateShares, 500);
     return () => clearTimeout(timeoutId);
-  }, [inputValue, actionType, vaultLens, flashLoanMintHelper, flashLoanRedeemHelper, publicProvider, isMaxWithdraw]);
+  }, [inputValue, actionType, vaultLens, flashLoanRedeemHelperLens, publicProvider, isMaxWithdraw]);
 
   const setMaxDeposit = async () => {
     if (!vaultLens) return;
@@ -297,14 +299,14 @@ export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoa
   };
 
   const setMaxWithdraw = async () => {
-    if (!flashLoanRedeemHelper || !sharesBalance) {
+    if (!flashLoanRedeemHelperLens || !sharesBalance) {
       setMaxAmount('0');
       return;
     }
 
     try {
       const rawShares = parseUnits(sharesBalance, Number(sharesDecimals));
-      const maxWeth = await flashLoanRedeemHelper.previewRedeemSharesWithCurveAndFlashLoanBorrow(rawShares);
+      const maxWeth = await flashLoanRedeemHelperLens.previewRedeemSharesWithCurveAndFlashLoanBorrow(rawShares);
       setMaxAmount(formatEther(maxWeth));
     } catch (err) {
       console.error("Error calculating max withdraw:", err);
@@ -322,7 +324,7 @@ export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoa
 
   useEffect(() => {
     // Reset state if input is empty or invalid
-    if (!inputValue || !estimatedShares || estimatedShares <= 0n) {
+    if (isInputZeroOrNaN || !estimatedShares || estimatedShares <= 0n) {
       setPreviewedWstEthAmount(null);
       setEthToWrapValue('');
       setHasInsufficientBalance(false);
@@ -394,7 +396,6 @@ export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoa
   }, [
     previewData,
     estimatedShares,
-    actionType,
     useEthWrapToWSTETH,
     isWstETHVault,
     collateralTokenBalance,
@@ -428,37 +429,47 @@ export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoa
 
     setWrapError('');
     setWrapSuccess('');
+    setIsProcessing(true);
 
-    // If using ETH input for wstETH vault, wrap ETH to wstETH first
-    if (useEthWrapToWSTETH && isWstETHVault && ethToWrapValue && provider && signer) {
-      setIsWrapping(true);
-      const ethAmount = parseEther(ethToWrapValue);
+    try {
+      // If using ETH input for wstETH vault, wrap ETH to wstETH first
+      if (useEthWrapToWSTETH && isWstETHVault && ethToWrapValue && provider && signer) {
+        setIsWrapping(true);
+        const ethAmount = parseEther(ethToWrapValue);
 
-      const wrapResult = await wrapEthToWstEth(
-        provider,
-        signer,
-        ethAmount,
-        address,
-        setWrapSuccess,
-        setWrapError
-      );
+        const wrapResult = await wrapEthToWstEth(
+          provider,
+          signer,
+          ethAmount,
+          address,
+          setWrapSuccess,
+          setWrapError
+        );
 
-      setIsWrapping(false);
+        if (!wrapResult) {
+          setIsWrapping(false);
+          setIsProcessing(false);
+          return; // Error already set by wrapEthToWstEth, finally will handle processing state
+        }
 
-      if (!wrapResult) {
-        return; // Error already set by wrapEthToWstEth
+        // Refresh balances to get updated wstETH balance
+        await refreshBalances();
+        setIsWrapping(false);
       }
 
-      // Refresh balances to get updated wstETH balance
-      await refreshBalances();
-    }
+      const success = await flashLoan.execute();
 
-    const success = await flashLoan.execute();
-
-    if (success) {
-      setInputValue('');
-      setEstimatedShares(null);
-      setEthToWrapValue('');
+      if (success) {
+        setInputValue('');
+        setEstimatedShares(null);
+        setEthToWrapValue('');
+      }
+    } catch (err) {
+      console.error('Error in handling flash loan submit:', err);
+    } finally {
+      setIsProcessing(false);
+      // Safety check to ensure isWrapping is also disabled if something failed during wrap
+      setIsWrapping(false);
     }
   };
 
@@ -492,6 +503,18 @@ export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoa
 
   const userBalance = actionType === 'deposit' ? collateralTokenBalance : sharesBalance;
   const userBalanceToken = actionType === 'deposit' ? formatTokenSymbol(collateralTokenSymbol) : sharesSymbol;
+
+  const shouldShowWrapPreview  = isShowWrapPreview({
+    inputValue,
+    isInputMoreThanMax,
+    isAmountLessThanMin,
+    invalidRebalanceMode,
+    hasInsufficientBalance,
+    isErrorLoadingPreview,
+    showWarning,
+    isWrapping,
+    flashLoanLoading: flashLoan.loading
+  });
 
   return (
     <div>
@@ -578,7 +601,7 @@ export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoa
                 <p className="mt-1 text-xs text-gray-500">
                   ETH will be automatically wrapped to wstETH
                 </p>
-                {previewedWstEthAmount && ethToWrapValue && (
+                {previewedWstEthAmount && ethToWrapValue && shouldShowWrapPreview && (
                   <p className="mt-1 text-xs text-green-600">
                     → Will wrap <NumberDisplay value={ethToWrapValue} /> ETH to ~<NumberDisplay value={formatUnits(previewedWstEthAmount, collateralTokenDecimals)} /> wstETH
                   </p>
@@ -588,7 +611,7 @@ export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoa
           </>
         )}
 
-        {!inputValue ? null :
+        {isInputZeroOrNaN ? null :
           isInputMoreThanMax && !flashLoan.loading && !isWrapping ?
             (
               <WarningMessage
@@ -604,11 +627,10 @@ export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoa
               />
             ) : isErrorLoadingPreview ? (
               <ErrorMessage text="Error loading preview." />
-            ) : estimatedShares !== null && estimatedShares > 0n && previewData && !!inputValue ? (
+            ) : estimatedShares !== null && estimatedShares > 0n && previewData && !isInputZeroOrNaN ? (
               <PreviewBox
                 receive={receive}
                 provide={provide}
-                isLoading={isLoadingPreview}
                 title="Transaction Preview"
               />
             ) : null}
@@ -617,7 +639,6 @@ export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoa
           type="submit"
           disabled={
             flashLoan.loading ||
-            !inputValue ||
             !estimatedShares ||
             estimatedShares <= 0n ||
             flashLoan.isApproving ||
@@ -627,7 +648,9 @@ export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoa
             invalidRebalanceMode ||
             isInputMoreThanMax ||
             isMinMoreThanMax ||
-            isAmountLessThanMin
+            isAmountLessThanMin ||
+            !previewData ||
+            isInputZeroOrNaN
           }
           className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
