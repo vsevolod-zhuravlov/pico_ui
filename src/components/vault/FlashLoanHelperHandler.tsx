@@ -90,7 +90,7 @@ export default function FlashLoanHelperHandler({ helperType }: FlashLoanHelperHa
   const helperAddress = helperType === 'mint' ? flashLoanMintHelperAddress : flashLoanRedeemHelperAddress;
 
   // Check if this is a wstETH vault that supports ETH input
-  const isWstETHVault = helperType === 'mint' && collateralToken && isWstETHAddress(collateralTokenAddress || '');
+  const isWstETHVault = collateralToken && isWstETHAddress(collateralTokenAddress || '');
 
   const {
     previewData,
@@ -324,7 +324,6 @@ export default function FlashLoanHelperHandler({ helperType }: FlashLoanHelperHa
   }, [
     previewData,
     sharesToProcess,
-    helperType,
     useEthWrapToWSTETH,
     isWstETHVault,
     collateralTokenBalance,
