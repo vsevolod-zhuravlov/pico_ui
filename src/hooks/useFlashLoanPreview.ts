@@ -91,7 +91,7 @@ export const useFlashLoanPreview = ({
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [sharesToProcess, helperType, sharesBalance, mintHelper, redeemHelper]);
+  }, [sharesToProcess, helperType, sharesBalance, mintHelperLens, redeemHelperLens]);
 
   // Reset preview data and errors when helper type changes
   useEffect(() => {
