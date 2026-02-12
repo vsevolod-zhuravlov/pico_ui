@@ -38,6 +38,7 @@ type ActionType = 'deposit' | 'withdraw';
 
 interface FlashLoanDepositWithdrawHandlerProps {
   actionType: ActionType;
+  setIsProcessing: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const GAS_RESERVE_MULTIPLIER = 3n;
@@ -49,7 +50,10 @@ const MINT_SLIPPAGE_DIVIDER = 1000000;
 const FLASH_LOAN_DEPOSIT_WITHDRAW_PRECISION_DIVIDEND = 99999;
 const FLASH_LOAN_DEPOSIT_WITHDRAW_PRECISION_DIVIDER = 100000;
 
-export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoanDepositWithdrawHandlerProps) {
+export default function FlashLoanDepositWithdrawHandler({
+  actionType,
+  setIsProcessing
+}: FlashLoanDepositWithdrawHandlerProps) {
   const [inputValue, setInputValue] = useState('');
   const [estimatedShares, setEstimatedShares] = useState<bigint | null>(null);
   const [wrapError, setWrapError] = useState<string>('');
@@ -424,37 +428,47 @@ export default function FlashLoanDepositWithdrawHandler({ actionType }: FlashLoa
 
     setWrapError('');
     setWrapSuccess('');
+    setIsProcessing(true);
 
-    // If using ETH input for wstETH vault, wrap ETH to wstETH first
-    if (useEthWrapToWSTETH && isWstETHVault && ethToWrapValue && provider && signer) {
-      setIsWrapping(true);
-      const ethAmount = parseEther(ethToWrapValue);
+    try {
+      // If using ETH input for wstETH vault, wrap ETH to wstETH first
+      if (useEthWrapToWSTETH && isWstETHVault && ethToWrapValue && provider && signer) {
+        setIsWrapping(true);
+        const ethAmount = parseEther(ethToWrapValue);
 
-      const wrapResult = await wrapEthToWstEth(
-        provider,
-        signer,
-        ethAmount,
-        address,
-        setWrapSuccess,
-        setWrapError
-      );
+        const wrapResult = await wrapEthToWstEth(
+          provider,
+          signer,
+          ethAmount,
+          address,
+          setWrapSuccess,
+          setWrapError
+        );
 
-      if (!wrapResult) {
+        if (!wrapResult) {
+          setIsWrapping(false);
+          setIsProcessing(false);
+          return; // Error already set by wrapEthToWstEth, finally will handle processing state
+        }
+
+        // Refresh balances to get updated wstETH balance
+        await refreshBalances();
         setIsWrapping(false);
-        return; // Error already set by wrapEthToWstEth
       }
 
-      // Refresh balances to get updated wstETH balance
-      await refreshBalances();
+      const success = await flashLoan.execute();
+
+      if (success) {
+        setInputValue('');
+        setEstimatedShares(null);
+        setEthToWrapValue('');
+      }
+    } catch (err) {
+      console.error('Error in handling flash loan submit:', err);
+    } finally {
+      setIsProcessing(false);
+      // Safety check to ensure isWrapping is also disabled if something failed during wrap
       setIsWrapping(false);
-    }
-
-    const success = await flashLoan.execute();
-
-    if (success) {
-      setInputValue('');
-      setEstimatedShares(null);
-      setEthToWrapValue('');
     }
   };
 
