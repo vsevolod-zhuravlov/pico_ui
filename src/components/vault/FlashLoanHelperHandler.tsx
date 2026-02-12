@@ -10,7 +10,8 @@ import {
   wrapEthToWstEth,
   calculateEthWrapForFlashLoan,
   processInput,
-  isShowWrapPreview
+  isShowWrapPreview,
+  isZeroOrNan
 } from '@/utils';
 import {
   PreviewBox,
@@ -135,6 +136,8 @@ export default function FlashLoanHelperHandler({
     setWrapError('');
     setWrapSuccess('');
   }, [helperType]);
+
+  const isInputZeroOrNaN = isZeroOrNan(inputValue);
 
   const isInputMoreThanMax = useIsAmountMoreThanMax({
     amount: inputValue,
@@ -512,7 +515,7 @@ export default function FlashLoanHelperHandler({
           </>
         )}
 
-        {!inputValue ? null : isInputMoreThanMax && !flashLoan.loading ? (
+        {isInputZeroOrNaN ? null : isInputMoreThanMax && !flashLoan.loading ? (
           <WarningMessage
             text="Entered amount higher than max"
           />
@@ -540,7 +543,6 @@ export default function FlashLoanHelperHandler({
             flashLoan.loading ||
             flashLoan.isApproving ||
             isWrapping ||
-            !inputValue ||
             !sharesToProcess ||
             hasInsufficientBalance ||
             isErrorLoadingPreview ||
@@ -548,7 +550,8 @@ export default function FlashLoanHelperHandler({
             isMinMoreThanMax ||
             isInputMoreThanMax ||
             isAmountLessThanMin ||
-            !previewData
+            !previewData ||
+            isInputZeroOrNaN
           }
           className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >

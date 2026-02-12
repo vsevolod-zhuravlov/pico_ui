@@ -10,7 +10,8 @@ import {
   wrapEthToWstEth,
   calculateEthWrapForFlashLoan,
   processInput,
-  isShowWrapPreview
+  isShowWrapPreview,
+  isZeroOrNan
 } from '@/utils';
 import {
   PreviewBox,
@@ -143,6 +144,8 @@ export default function FlashLoanDepositWithdrawHandler({
     setShowWarning(false);
   }, [actionType]);
 
+  const isInputZeroOrNaN = isZeroOrNan(inputValue);
+
   const isInputMoreThanMax = useIsAmountMoreThanMax({
     amount: inputValue,
     max: maxAmount,
@@ -222,7 +225,7 @@ export default function FlashLoanDepositWithdrawHandler({
   });
 
   const calculateShares = async () => {
-    if (!inputValue || !vaultLens) {
+    if (isInputZeroOrNaN || !vaultLens) {
       setEstimatedShares(null);
       setShowWarning(false);
       return;
@@ -323,7 +326,7 @@ export default function FlashLoanDepositWithdrawHandler({
 
   useEffect(() => {
     // Reset state if input is empty or invalid
-    if (!inputValue || !estimatedShares || estimatedShares <= 0n) {
+    if (isInputZeroOrNaN || !estimatedShares || estimatedShares <= 0n) {
       setPreviewedWstEthAmount(null);
       setEthToWrapValue('');
       setHasInsufficientBalance(false);
@@ -610,7 +613,7 @@ export default function FlashLoanDepositWithdrawHandler({
           </>
         )}
 
-        {!inputValue ? null :
+        {isInputZeroOrNaN ? null :
           isInputMoreThanMax && !flashLoan.loading && !isWrapping ?
             (
               <WarningMessage
@@ -626,7 +629,7 @@ export default function FlashLoanDepositWithdrawHandler({
               />
             ) : isErrorLoadingPreview ? (
               <ErrorMessage text="Error loading preview." />
-            ) : estimatedShares !== null && estimatedShares > 0n && previewData && !!inputValue ? (
+            ) : estimatedShares !== null && estimatedShares > 0n && previewData && !isInputZeroOrNaN ? (
               <PreviewBox
                 receive={receive}
                 provide={provide}
@@ -638,7 +641,6 @@ export default function FlashLoanDepositWithdrawHandler({
           type="submit"
           disabled={
             flashLoan.loading ||
-            !inputValue ||
             !estimatedShares ||
             estimatedShares <= 0n ||
             flashLoan.isApproving ||
@@ -649,7 +651,8 @@ export default function FlashLoanDepositWithdrawHandler({
             isInputMoreThanMax ||
             isMinMoreThanMax ||
             isAmountLessThanMin ||
-            !previewData
+            !previewData ||
+            isInputZeroOrNaN
           }
           className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
