@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { FlashLoanMintHelper, FlashLoanRedeemHelper } from '@/typechain-types';
 import { TokenType } from '@/types/actions';
 
@@ -17,14 +17,15 @@ interface PreviewData {
 }
 
 interface UseFlashLoanPreviewParams {
-  sharesToProcess: bigint | null;
   helperType: HelperType;
-  mintHelper: FlashLoanMintHelper | null;
-  redeemHelper: FlashLoanRedeemHelper | null;
   sharesBalance: string;
+  sharesToProcess: bigint | null;
+  mintHelperLens: FlashLoanMintHelper | null;
+  redeemHelperLens: FlashLoanRedeemHelper | null;
 }
 
 interface UseFlashLoanPreviewReturn {
+  isLoadingPreview: boolean;
   previewData: PreviewData | null;
   receive: Array<{ amount: bigint; tokenType: TokenType }>;
   provide: Array<{ amount: bigint; tokenType: TokenType }>;
@@ -35,107 +36,95 @@ interface UseFlashLoanPreviewReturn {
 export const useFlashLoanPreview = ({
   sharesToProcess,
   helperType,
-  mintHelper,
-  redeemHelper,
+  mintHelperLens,
+  redeemHelperLens,
   sharesBalance,
 }: UseFlashLoanPreviewParams): UseFlashLoanPreviewReturn => {
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [isErrorLoadingPreview, setIsErrorLoadingPreview] = useState(false);
   const [invalidRebalanceMode, setInvalidRebalanceMode] = useState(false);
   const [previewData, setPreviewData] = useState<PreviewData | null>(null);
 
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  const isValid =
-    sharesToProcess !== null &&
-    sharesToProcess > 0n &&
-    (
-      (helperType === 'mint' && !!mintHelper) ||
-      (helperType === 'redeem' && !!redeemHelper)
-    );
-
-  const loadPreview = async () => {
-    if (!isValid) {
+  const loadPreview = async (shares: bigint | null) => {
+    if (
+      shares === null || shares <= 0n ||
+      helperType === 'mint' && !mintHelperLens ||
+      helperType === 'redeem' && !redeemHelperLens
+    ) {
       setPreviewData(null);
       return;
     }
 
     setIsErrorLoadingPreview(false);
     setInvalidRebalanceMode(false);
+    setIsLoadingPreview(true);
 
     try {
       let amount: bigint;
-
       if (helperType === 'mint') {
-        amount = await mintHelper!.previewMintSharesWithFlashLoanCollateral(
-          sharesToProcess!
-        );
+        // returns collateral required
+        amount = await mintHelperLens!.previewMintSharesWithFlashLoanCollateral(shares);
       } else {
-        amount = await redeemHelper!.previewRedeemSharesWithCurveAndFlashLoanBorrow(
-          sharesToProcess!
-        );
+        // returns borrow tokens to receive
+        amount = await redeemHelperLens!.previewRedeemSharesWithCurveAndFlashLoanBorrow(shares);
       }
-
       amount = reduceByPrecisionBuffer(amount);
-
       setPreviewData({ amount });
-    } catch (err: any) {
-      console.error('Error loading preview:', err);
-      setIsErrorLoadingPreview(true);
 
-      if (err?.message?.includes('InvalidRebalanceMode')) {
+    } catch (err: any) {
+      setIsErrorLoadingPreview(true);
+      console.error('Error loading preview:', err);
+
+      if (err.message.includes('InvalidRebalanceMode')) {
         setInvalidRebalanceMode(true);
       }
 
       setPreviewData(null);
+    } finally {
+      setIsLoadingPreview(false);
     }
   };
 
-  // Immediate first load
-  // Start auto-refresh every 6s AFTER first load
   useEffect(() => {
-    if (!isValid) {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-      return;
-    }
+    const timeoutId = setTimeout(() => {
+      loadPreview(sharesToProcess);
+    }, 500);
 
-    loadPreview();
+    return () => clearTimeout(timeoutId);
+  }, [sharesToProcess, helperType, sharesBalance]);
 
-    // auto refresh
-    intervalRef.current = setInterval(() => {
-      loadPreview();
-    }, 6000);
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    };
-  }, [sharesToProcess, helperType, mintHelper, redeemHelper, sharesBalance]);
-
+  // Reset preview data and errors when helper type changes
   useEffect(() => {
+    setPreviewData(null);
     setIsErrorLoadingPreview(false);
     setInvalidRebalanceMode(false);
-    setPreviewData(null);
   }, [helperType]);
 
-  const receive: Array<{ amount: bigint; tokenType: TokenType }> = [];
-  const provide: Array<{ amount: bigint; tokenType: TokenType }> = [];
+  const getReceiveAndProvide = () => {
+    const receive: Array<{ amount: bigint; tokenType: TokenType }> = [];
+    const provide: Array<{ amount: bigint; tokenType: TokenType }> = [];
 
-  if (previewData && sharesToProcess && sharesToProcess > 0n) {
+    if (!sharesToProcess || sharesToProcess <= 0n || !previewData) {
+      return { receive, provide };
+    }
+
     if (helperType === 'mint') {
+      // For mint: provide collateral, receive shares
       provide.push({ amount: previewData.amount, tokenType: 'collateral' });
       receive.push({ amount: sharesToProcess, tokenType: 'shares' });
     } else {
+      // For redeem: provide shares, receive borrow tokens
       provide.push({ amount: sharesToProcess, tokenType: 'shares' });
       receive.push({ amount: previewData.amount, tokenType: 'borrow' });
     }
-  }
+
+    return { receive, provide };
+  };
+
+  const { receive, provide } = getReceiveAndProvide();
 
   return {
+    isLoadingPreview,
     previewData,
     receive,
     provide,

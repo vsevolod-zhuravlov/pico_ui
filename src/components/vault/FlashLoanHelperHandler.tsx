@@ -74,8 +74,8 @@ export default function FlashLoanHelperHandler({
   const {
     vaultLens,
     vaultAddress,
-    flashLoanMintHelper,
-    flashLoanRedeemHelper,
+    flashLoanMintHelperLens,
+    flashLoanRedeemHelperLens,
     flashLoanMintHelperAddress,
     flashLoanRedeemHelperAddress,
     collateralToken,
@@ -107,8 +107,8 @@ export default function FlashLoanHelperHandler({
     helperType,
     sharesToProcess,
     sharesBalance,
-    mintHelper: flashLoanMintHelper,
-    redeemHelper: flashLoanRedeemHelper
+    mintHelperLens: flashLoanMintHelperLens,
+    redeemHelperLens: flashLoanRedeemHelperLens
   });
 
   const maxAmountUsd = useMaxAmountUsd({
