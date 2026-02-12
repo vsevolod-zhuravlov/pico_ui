@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { parseUnits, parseEther, formatUnits, formatEther } from 'ethers';
 import { useAppContext, useVaultContext } from '@/contexts';
 import {
@@ -176,7 +176,7 @@ export default function FlashLoanDepositWithdrawHandler({
     return amount * BigInt(FLASH_LOAN_DEPOSIT_WITHDRAW_PRECISION_DIVIDEND) / BigInt(FLASH_LOAN_DEPOSIT_WITHDRAW_PRECISION_DIVIDER);
   }
 
-  const loadMinAvailable = async () => {
+  const loadMinAvailable = useCallback(async () => {
     if (!vaultLens || !publicProvider || !vaultAddress || !sharesDecimals) return;
 
     const [, deltaShares] = await vaultLens.previewLowLevelRebalanceBorrow(0);
@@ -215,7 +215,7 @@ export default function FlashLoanDepositWithdrawHandler({
       setMinDeposit('0');
       setMinWithdraw('0');
     }
-  };
+  }, [vaultLens, publicProvider, vaultAddress, sharesDecimals]);
 
   useAdaptiveInterval(loadMinAvailable, {
     initialDelay: 12000,

@@ -175,7 +175,7 @@ export default function AuctionHandler({ futureBorrowAssets, futureCollateralAss
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [amount, auctionType]);
+  }, [amount, auctionType, vaultLens]);
 
   const checkAndApproveRequiredAssets = async () => {
     if (!address || !vaultAddress || !amount) {

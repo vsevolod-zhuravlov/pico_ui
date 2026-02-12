@@ -61,20 +61,46 @@ export const MAINNET_NETWORK = {
   blockExplorerUrls: ['https://etherscan.io']
 };
 
-export const NETWORK_CONFIGS = {
+export interface NetworkConfig {
+  chainId: string;
+  chainIdBigInt: bigint;
+  chainName: string;
+  name: string;
+  urlParam: string;
+  color: string;
+  nativeCurrency: {
+    name: string;
+    symbol: string;
+    decimals: number;
+  };
+  rpcUrls: string[];
+  blockExplorerUrls: string[];
+}
+
+export const NETWORK_CONFIGS: Record<string, NetworkConfig> = {
   [SEPOLIA_CHAIN_ID_STRING]: {
     ...SEPOLIA_NETWORK,
     chainId: SEPOLIA_CHAIN_ID_HEX,
+    chainIdBigInt: SEPOLIA_CHAIN_ID,
     name: 'Sepolia',
-    urlParam: 'sepolia'
+    urlParam: 'sepolia',
+    color: 'bg-blue-500'
   },
   [MAINNET_CHAIN_ID_STRING]: {
     ...MAINNET_NETWORK,
     chainId: MAINNET_CHAIN_ID_HEX,
+    chainIdBigInt: MAINNET_CHAIN_ID,
     name: 'Ethereum',
-    urlParam: 'ethereum'
+    urlParam: 'ethereum',
+    color: 'bg-green-500'
   }
 };
+
+// Helper to get networks as array for iteration
+export const NETWORKS_LIST = Object.entries(NETWORK_CONFIGS).map(([key, config]) => ({
+  ...config,
+  chainIdString: key
+}));
 
 // Only these networks are supported. Any unrecognized network parameter will default to Sepolia.
 export const URL_PARAM_TO_CHAIN_ID = {
