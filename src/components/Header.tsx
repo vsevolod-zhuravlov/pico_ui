@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import ConnectWallet from "./connect/ConnectWallet";
-import Container from "./ui/Container";
 import SettingsPopup from "./SettingsPopup";
 
 export default function Header() {
@@ -22,7 +21,7 @@ export default function Header() {
 
   return (
     <header className="relative z-50 bg-white/80 h-16 flex-shrink-0">
-      <Container>
+      <div className="w-full max-w-[1300px] mx-auto px-4 sm:px-6 lg:px-8 h-full">
         <div className="w-full h-full flex justify-between items-center text-gray-700">
           <div className="text-black font-semibold text-lg [@media(min-width:640px)]:text-xl">LTV Protocol</div>
 
@@ -41,7 +40,7 @@ export default function Header() {
             <SettingsPopup isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
           </div>
         </div>
-      </Container>
+      </div>
     </header>
   );
 }
